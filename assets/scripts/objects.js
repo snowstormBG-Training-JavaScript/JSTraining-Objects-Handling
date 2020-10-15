@@ -18,10 +18,21 @@ const renderMovies = (filter = '') => {
 
     filteredMovies.forEach((movie) => {
         const movieEl = document.createElement('li');
-        let text = movie.info.title + ' - ';
-        for (const movieKey in movie.info) {
-            if (movieKey !== 'title') {
-                text = text + `${movieKey}: ${movie.info[movieKey]}`;
+
+        //Validate property existence
+        // if ('info' in movie)
+        // if (movie.info === undefined)
+        // if (movie.hasOwnProperty('info'))
+
+        const {info, ...otherProps} = movie;
+        console.log(otherProps);
+        const {title: newNameForTitle} = {...info};
+        let {getFormattedTitle} = movie;
+        // getFormattedTitle = getFormattedTitle.bind(movie);
+        let text = getFormattedTitle.call(movie) + ' - ';
+        for (const key in info) {
+            if (key !== 'title' && key !== '_title') {
+                text = text + `${key}: ${info[key]}`;
             }
         }
         movieEl.textContent = text;
@@ -34,7 +45,7 @@ const addMovieHandler = () => {
     const extraName = document.getElementById('extra-name').value;
     const extraValue = document.getElementById('extra-value').value;
 
-    if (title.trim() === '' ||
+    if (
         extraName.trim() === '' ||
         extraValue.trim() === ''
     ) {
@@ -43,11 +54,24 @@ const addMovieHandler = () => {
 
     const newMovie = {
         info: {
-            title,
+            set title(val) {
+                if (val.trim() === '') {
+                    this._title = 'DEFAULT';
+                    return;
+                }
+                this._title = val;
+            },
+            get title() {
+                return this._title;
+            },
             [extraName]: extraValue
         },
-        id: Math.random()
+        id: Math.random().toString(),
+        getFormattedTitle() {
+            return this.info.title.toUpperCase();
+        }
     };
+    newMovie.info.title = title;
 
     movies.push(newMovie);
     renderMovies();
